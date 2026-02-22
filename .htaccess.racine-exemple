@@ -1,0 +1,10 @@
+# À utiliser uniquement si vous ne pouvez pas modifier la "Racine des documents"
+# dans cPanel (o2switch) pour pointer vers le dossier public/.
+# Placez ce fichier à la racine du projet (à côté de artisan).
+# Renommez-le en .htaccess (supprimez ".racine-exemple").
+# Sinon, préférez toujours : Domaines configurés → Racine des documents = .../public
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

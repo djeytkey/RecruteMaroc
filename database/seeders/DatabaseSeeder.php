@@ -15,10 +15,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::updateOrCreate(
-            ['email' => 'admin@recrutement.ma'],
+            ['email' => 'tarik.engineering@gmail.com'],
             [
-                'name' => 'Admin',
-                'password' => bcrypt('password'),
+                'name' => 'Tarik BOUKJIJ',
+                'password' => bcrypt('123456789'),
                 'role' => User::ROLE_ADMIN,
                 'is_active' => true,
             ]

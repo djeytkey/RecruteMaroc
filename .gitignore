@@ -13,8 +13,8 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
 /public/hot
+# /public/build : ne pas ignorer pour pouvoir déployer les assets compilés via Git (npm non dispo sur le serveur)
 /public/storage
 /storage/*.key
 /storage/pail

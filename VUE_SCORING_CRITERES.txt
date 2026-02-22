@@ -1,0 +1,104 @@
+================================================================================
+  VUE GÉNÉRALE — CALCUL DU SCORING (COMPATIBILITÉ) DES CANDIDATURES
+================================================================================
+
+Ce document décrit comment le score de compatibilité est calculé lorsqu'un
+candidat postule à une offre d'emploi.
+
+
+1. SOURCES DU SCORING
+---------------------
+Le score dépend uniquement des **critères de l’offre** définis par le recruteur
+et des **réponses du candidat** à ces critères lors de la candidature.
+
+Chaque offre peut avoir plusieurs critères. Chaque critère a :
+  - un **type** : quantitatif ou déclaratif ;
+  - un **poids (weight_percentage)** : importance relative du critère (en %) ;
+  - pour les critères quantitatifs uniquement : un **niveau attendu (expected_level)** optionnel (25, 50, 75 ou 100).
+
+
+2. TYPES DE CRITÈRES
+--------------------
+
+  • **Critère quantitatif**
+    Le candidat choisit un niveau parmi : 25 % (Débutant), 50 % (Intermédiaire),
+    75 % (Avancé), 100 % (Expert). La réponse est donc une valeur numérique (25, 50, 75 ou 100).
+
+  • **Critère déclaratif**
+    Le candidat saisit un texte libre (ex. description, justification). Il n’y a
+    pas de niveau numérique : soit il répond (contribution au score), soit il ne répond pas (0).
+
+
+3. NORMALISATION DES POIDS
+--------------------------
+Les poids des critères sont exprimés en pourcentage. On calcule d’abord la
+**somme des poids** de tous les critères de l’offre (totalWeight). Si cette
+somme vaut 0, on considère qu’elle vaut 100 pour éviter les divisions par zéro.
+
+Chaque critère entre ensuite dans le calcul avec sa part relative :
+  (poids du critère / totalWeight).
+
+
+4. CONTRIBUTION D’UN CRITÈRE AU SCORE TOTAL
+-------------------------------------------
+
+  • **Critère quantitatif** (avec une réponse fournie) :
+    - On prend la valeur envoyée par le candidat (25, 50, 75 ou 100).
+    - Si le recruteur a défini un « niveau attendu » (expected_level), on
+      utilise au plus ce niveau : contribution = min(valeur candidat, niveau attendu).
+    - Sinon, on utilise la valeur du candidat telle quelle (niveau attendu = 100).
+    - Cette valeur est ramenée à une fraction sur 100 (ex. 75 → 0,75).
+    - La contribution du critère au score total est :
+        (valeur utilisée / 100) × (poids du critère / totalWeight) × 100.
+    - Ainsi, si le candidat atteint ou dépasse le niveau attendu, il obtient
+      100 % de la part de ce critère ; sinon, une part proportionnelle.
+
+  • **Critère déclaratif** (avec une réponse fournie) :
+    - Dès qu’il y a une réponse (texte non vide), le critère est considéré
+      comme satisfait.
+    - La contribution est : (poids du critère / totalWeight) × 100.
+    - Il n’y a pas de graduation : soit on donne toute la part du critère,
+      soit 0 si pas de réponse.
+
+  • **Pas de réponse** (quantitatif non renseigné ou déclaratif vide) :
+    - La contribution du critère est 0.
+
+
+5. SCORE GLOBAL (COMPATIBILITÉ)
+-------------------------------
+Le **score de compatibilité** de la candidature est la **somme des contributions**
+de tous les critères, arrondie à deux décimales.
+
+  - Théoriquement, si la somme des poids vaut 100 et que tous les critères
+    sont « pleinement » satisfaits (quantitatif au moins au niveau attendu,
+    déclaratif avec réponse), le score total peut atteindre 100 %.
+  - Si les poids ne totalisent pas 100, le score maximum possible est
+    proportionnel à la répartition des poids (normalisation par totalWeight).
+
+
+6. DONNÉES ENREGISTRÉES
+-----------------------
+  - **Candidature (application)** :
+    - compatibility_score : score total (pourcentage).
+    - criteria_scores : détail des contributions par critère (par id de critère).
+
+  - **Réponses par critère (application_answers)** :
+    - Pour chaque critère, on enregistre la valeur (numérique ou texte) et
+      la contribution de ce critère au score (score_contribution).
+
+Les listes de candidatures (côté recruteur) sont triées par score de
+compatibilité décroissant pour mettre en avant les profils les plus proches
+des critères de l’offre.
+
+
+7. RÉSUMÉ EN UN COUP D’ŒIL
+---------------------------
+  - Poids : chaque critère a un poids en % ; on normalise par la somme des poids.
+  - Quantitatif : niveau candidat (25–100) plafonné au niveau attendu si défini ;
+    contribution = (niveau utilisé / 100) × part du critère dans le total.
+  - Déclaratif : réponse présente → contribution = part du critère ; sinon 0.
+  - Score total = somme des contributions, affiché en % (ex. 78,50 %).
+
+================================================================================
+  Fin du document
+================================================================================

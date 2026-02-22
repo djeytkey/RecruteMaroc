@@ -280,9 +280,29 @@ Pour mettre à jour le site **https://recrute.moroccoder.com** sans tout ré-upl
    bash deploy.sh
    ```
 
-Le script **`deploy.sh`** à la racine du projet fait : `composer install --no-dev`, `php artisan migrate --force`, `storage:link`, puis mise en cache de la config, des routes et des vues. Vous pouvez l’éditer pour ajouter `npm run build` si vous compilez les assets sur le serveur.
+Le script **`deploy.sh`** à la racine du projet fait : `composer install --no-dev`, `php artisan migrate --force`, `storage:link`, puis mise en cache de la config, des routes et des vues. **Ne pas** lancer `npm run build` sur le serveur si npm n’est pas autorisé : voir ci-dessous.
 
 **À vérifier** : le **document root** du domaine **recrute.moroccoder.com** doit pointer vers le dossier **`public`** du projet (ex. `public_html/recrute/public`). Le fichier **`.env`** ne doit pas être dans Git ; il reste uniquement sur le serveur.
+
+### Assets Vite (CSS/JS) sans npm sur le serveur
+
+Si vous ne pouvez pas exécuter `npm` sur l’hébergement, les assets doivent être **compilés en local** puis **versionnés dans Git** :
+
+1. **En local** (sur votre PC), à la racine du projet :
+   ```bash
+   npm install
+   npm run build
+   ```
+2. Le dossier **`public/build`** est créé (fichiers compilés + `manifest.json`). Il n’est plus ignoré par Git.
+3. **Commiter et pousser** ce dossier pour que le serveur le reçoive au prochain `git pull` :
+   ```bash
+   git add public/build
+   git commit -m "Build assets Vite"
+   git push origin main
+   ```
+4. Sur le serveur : `git pull origin main` puis `bash deploy.sh`. Les pages chargeront les CSS/JS depuis `public/build/`.
+
+À chaque modification du CSS ou du JS (fichiers dans `resources/css`, `resources/js`), refaire `npm run build` en local, puis `git add public/build`, commit et push.
 
 ---
 

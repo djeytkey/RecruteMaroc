@@ -13,7 +13,7 @@ class ProfileController extends Controller
 {
     public function edit(): View
     {
-        $profile = auth()->user()->candidateProfile;
+        $profile = auth()->user()->candidateProfile?->load('sector');
         $sectors = Sector::orderBy('name')->get();
         return view('candidat.profile.edit', compact('profile', 'sectors'));
     }
@@ -37,15 +37,17 @@ class ProfileController extends Controller
             'sector_id' => 'nullable|exists:sectors,id',
             'education_level' => 'nullable|string|in:Bac,Bac+2,Bac+3,Bac+5,Doctorat',
             'skills' => 'nullable|array',
-            'skills.*.name' => 'required_with:skills|string|max:255',
-            'skills.*.level' => 'required_with:skills|integer|in:25,50,75,100',
+            'skills.*.name' => 'nullable|string|max:255',
+            'skills.*.level' => 'nullable|integer|in:25,50,75,100',
             'languages' => 'nullable|array',
-            'languages.*.language' => 'required_with:languages|string|max:100',
-            'languages.*.level' => 'required_with:languages|string|max:50',
+            'languages.*.language' => 'nullable|string|max:100',
+            'languages.*.level' => 'nullable|string|in:'.implode(',', array_keys(config('recruitment.language_levels'))),
         ]);
 
-        $data['skills'] = $request->input('skills', []);
-        $data['languages'] = $request->input('languages', []);
+        $rawSkills = $request->input('skills', []);
+        $rawLanguages = $request->input('languages', []);
+        $data['skills'] = array_values(array_filter($rawSkills, fn($s) => !empty(trim($s['name'] ?? ''))));
+        $data['languages'] = array_values(array_filter($rawLanguages, fn($l) => !empty(trim($l['language'] ?? ''))));
 
         if ($profile) {
             $profile->update($data);
@@ -73,18 +75,32 @@ class ProfileController extends Controller
         }
         $path = $request->file('cv')->store('cvs', 'public');
         $profile->update(['cv_path' => $path]);
+        $profile->update(['completeness_percentage' => $this->computeCompleteness($profile->fresh())]);
 
         return redirect()->route('candidat.profile.edit')->with('success', 'CV mis à jour.');
     }
 
     private function computeCompleteness($profile): float
     {
-        $fields = ['first_name', 'last_name', 'phone', 'country', 'city', 'mobility', 'availability', 'experience_range', 'last_position', 'job_type_sought', 'sector_id', 'education_level', 'skills', 'languages', 'cv_path'];
+        $fields = ['first_name', 'last_name', 'phone', 'country', 'city', 'mobility', 'availability', 'experience_range', 'last_position', 'job_type_sought', 'sector_id', 'education_level', 'cv_path'];
         $filled = 0;
         foreach ($fields as $f) {
             $v = $profile->$f ?? null;
             if ($v !== null && $v !== '' && $v !== []) $filled++;
         }
-        return round(($filled / count($fields)) * 100, 2);
+        // Au moins une compétence saisie = 1 point
+        $skills = is_array($profile->skills ?? null) ? $profile->skills : [];
+        $hasSkills = count(array_filter($skills, function ($s) {
+            return !empty(trim((string) ($s['name'] ?? '')));
+        })) > 0;
+        if ($hasSkills) $filled++;
+        // Au moins une langue saisie = 1 point
+        $languages = is_array($profile->languages ?? null) ? $profile->languages : [];
+        $hasLanguages = count(array_filter($languages, function ($l) {
+            return !empty(trim((string) ($l['language'] ?? '')));
+        })) > 0;
+        if ($hasLanguages) $filled++;
+        $total = count($fields) + 2; // 13 champs + compétences + langues
+        return round(($filled / $total) * 100, 2);
     }
 }

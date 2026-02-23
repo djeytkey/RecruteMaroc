@@ -4,10 +4,30 @@
 
 @section('content')
 <div class="max-w-3xl">
-    <h1 class="text-2xl font-bold text-slate-800 mb-6">Mon profil candidat</h1>
-    @if($profile) <p class="text-slate-600 mb-4">Complétude : <strong>{{ $profile->completeness_percentage }}%</strong></p> @endif
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Mon profil candidat</h1>
+        <button type="button" id="btn-open-carte-candidat" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            Visualiser la carte candidat
+        </button>
+    </div>
 
-    <form action="{{ route('candidat.profile.update') }}" method="POST" class="space-y-6 bg-white rounded-xl border border-slate-200 p-6">
+    <div class="flex items-center gap-6 mb-6 p-4 bg-white rounded-xl border border-slate-200">
+        <div class="relative flex-shrink-0" style="width: 80px; height: 80px;">
+            @php $pct = $profile ? (float) $profile->completeness_percentage : 0; @endphp
+            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path class="text-slate-200" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="text-emerald-500 transition-all duration-500" stroke="currentColor" stroke-width="3" stroke-dasharray="{{ $pct }}, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700">{{ round($pct) }}%</span>
+        </div>
+        <div>
+            <p class="font-medium text-slate-800">Taux de complétude du profil</p>
+            <p class="text-sm text-slate-500">Complétez les champs pour améliorer votre visibilité.</p>
+        </div>
+    </div>
+
+    <form action="{{ route('candidat.profile.update') }}" method="POST" class="space-y-6 bg-white rounded-xl border border-slate-200 p-6" id="profile-form">
         @csrf
         @method('PUT')
         <div class="grid sm:grid-cols-2 gap-4">
@@ -94,6 +114,71 @@
                 @endforeach
             </select>
         </div>
+
+        <div class="border-t border-slate-200 pt-6">
+            <h2 class="text-lg font-semibold text-slate-800 mb-3">Compétences</h2>
+            <p class="text-sm text-slate-500 mb-3">Ajoutez vos compétences et indiquez votre niveau.</p>
+            <div id="skills-container" class="space-y-3">
+                @php $skills = old('skills', $profile?->skills ?? []); @endphp
+                @if(count($skills))
+                    @foreach($skills as $i => $skill)
+                        <div class="skill-row flex flex-wrap gap-2 items-end">
+                            <input type="text" name="skills[{{ $i }}][name]" value="{{ $skill['name'] ?? '' }}" placeholder="Ex: PHP, Excel…" class="flex-1 min-w-[120px] rounded-lg border-slate-300">
+                            <select name="skills[{{ $i }}][level]" class="w-48 rounded-lg border-slate-300">
+                                @foreach(config('recruitment.skill_levels') as $k => $v)
+                                    <option value="{{ $k }}" @selected(($skill['level'] ?? '') == $k)>{{ $v }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="remove-skill text-slate-400 hover:text-red-600 p-2" title="Supprimer">✕</button>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="skill-row flex flex-wrap gap-2 items-end">
+                        <input type="text" name="skills[0][name]" placeholder="Ex: PHP, Excel…" class="flex-1 min-w-[120px] rounded-lg border-slate-300">
+                        <select name="skills[0][level]" class="w-48 rounded-lg border-slate-300">
+                            @foreach(config('recruitment.skill_levels') as $k => $v)
+                                <option value="{{ $k }}">{{ $v }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="remove-skill text-slate-400 hover:text-red-600 p-2" title="Supprimer">✕</button>
+                    </div>
+                @endif
+            </div>
+            <button type="button" id="add-skill" class="mt-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium">+ Ajouter une compétence</button>
+        </div>
+
+        <div class="border-t border-slate-200 pt-6">
+            <h2 class="text-lg font-semibold text-slate-800 mb-3">Langues</h2>
+            <p class="text-sm text-slate-500 mb-3">Indiquez les langues que vous parlez et votre niveau.</p>
+            <div id="languages-container" class="space-y-3">
+                @php $languages = old('languages', $profile?->languages ?? []); @endphp
+                @if(count($languages))
+                    @foreach($languages as $i => $lang)
+                        <div class="language-row flex flex-wrap gap-2 items-end">
+                            <input type="text" name="languages[{{ $i }}][language]" value="{{ $lang['language'] ?? '' }}" placeholder="Ex: Français, Anglais…" class="flex-1 min-w-[120px] rounded-lg border-slate-300">
+                            <select name="languages[{{ $i }}][level]" class="w-48 rounded-lg border-slate-300">
+                                @foreach(config('recruitment.language_levels') as $k => $v)
+                                    <option value="{{ $k }}" @selected(($lang['level'] ?? '') === $k)>{{ $v }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="remove-language text-slate-400 hover:text-red-600 p-2" title="Supprimer">✕</button>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="language-row flex flex-wrap gap-2 items-end">
+                        <input type="text" name="languages[0][language]" placeholder="Ex: Français, Anglais…" class="flex-1 min-w-[120px] rounded-lg border-slate-300">
+                        <select name="languages[0][level]" class="w-48 rounded-lg border-slate-300">
+                            @foreach(config('recruitment.language_levels') as $k => $v)
+                                <option value="{{ $k }}">{{ $v }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="remove-language text-slate-400 hover:text-red-600 p-2" title="Supprimer">✕</button>
+                    </div>
+                @endif
+            </div>
+            <button type="button" id="add-language" class="mt-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium">+ Ajouter une langue</button>
+        </div>
+
         <div>
             <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">Enregistrer le profil</button>
         </div>
@@ -112,4 +197,157 @@
         </form>
     </div>
 </div>
+
+{{-- Modal Carte candidat --}}
+<div id="modal-carte-candidat" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="fixed inset-0 bg-black/60" id="modal-carte-backdrop" style="background-color: rgba(0, 0, 0, 0.6);"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-slate-800">Carte candidat</h2>
+                <button type="button" id="btn-close-carte-candidat" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg" aria-label="Fermer">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                @if(!$profile)
+                    <p class="text-slate-600">Complétez et enregistrez votre profil pour afficher la carte candidat.</p>
+                @else
+                    <article class="carte-candidat-body">
+                        <div class="bg-slate-800 text-white px-5 py-5 rounded-t-xl flex items-center gap-4">
+                            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-slate-600 flex items-center justify-center text-xl font-bold text-slate-300">
+                                {{ strtoupper(mb_substr($profile->first_name ?? '', 0, 1) . mb_substr($profile->last_name ?? '', 0, 1)) }}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold">{{ $profile->full_name }}</h3>
+                                @if($profile->last_position)<p class="text-slate-300 text-sm mt-0.5">{{ $profile->last_position }}</p>@endif
+                                @if($profile->sector)<p class="text-slate-400 text-xs mt-1">{{ $profile->sector->name }}</p>@endif
+                            </div>
+                        </div>
+                        <div class="border border-t-0 border-slate-200 rounded-b-xl p-5 space-y-4">
+                            <section>
+                                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Contact</h4>
+                                <ul class="space-y-1 text-slate-700 text-sm">
+                                    <li><span class="text-slate-500">Email :</span> {{ auth()->user()->email }}</li>
+                                    @if($profile->phone)<li><span class="text-slate-500">Tél :</span> {{ $profile->phone }}</li>@endif
+                                    @if($profile->city || $profile->country)<li><span class="text-slate-500">Lieu :</span> {{ trim(implode(', ', array_filter([$profile->city, $profile->country]))) }}</li>@endif
+                                </ul>
+                            </section>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <section>
+                                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Disponibilité & mobilité</h4>
+                                    <ul class="space-y-1 text-slate-700 text-sm">
+                                        @if($profile->availability)<li>{{ config('recruitment.availability')[$profile->availability] ?? $profile->availability }}</li>@endif
+                                        @if($profile->mobility)<li>{{ config('recruitment.mobility')[$profile->mobility] ?? $profile->mobility }}</li>@endif
+                                        @if(!$profile->availability && !$profile->mobility)<li class="text-slate-400">—</li>@endif
+                                    </ul>
+                                </section>
+                                <section>
+                                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Parcours</h4>
+                                    <ul class="space-y-1 text-slate-700 text-sm">
+                                        @if($profile->experience_range)<li>{{ config('recruitment.experience_range')[$profile->experience_range] ?? $profile->experience_range }}</li>@endif
+                                        @if($profile->education_level)<li>{{ config('recruitment.education_levels')[$profile->education_level] ?? $profile->education_level }}</li>@endif
+                                        @if($profile->job_type_sought)<li>{{ config('recruitment.job_types')[$profile->job_type_sought] ?? $profile->job_type_sought }}</li>@endif
+                                        @if(!$profile->experience_range && !$profile->education_level && !$profile->job_type_sought)<li class="text-slate-400">—</li>@endif
+                                    </ul>
+                                </section>
+                            </div>
+                            @php $skillsList = $profile->skills ?? []; $skillsList = array_filter($skillsList, function($s) { return !empty(trim($s['name'] ?? '')); }); @endphp
+                            @if(count($skillsList) > 0)
+                                <section>
+                                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Compétences</h4>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach($skillsList as $s)
+                                            <span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded text-xs">{{ $s['name'] ?? '' }}@if(isset($s['level']) && isset(config('recruitment.skill_levels')[$s['level']])) ({{ config('recruitment.skill_levels')[$s['level']] }})@endif</span>
+                                        @endforeach
+                                    </div>
+                                </section>
+                            @endif
+                            @php $langsList = $profile->languages ?? []; $langsList = array_filter($langsList, function($l) { return !empty(trim($l['language'] ?? '')); }); @endphp
+                            @if(count($langsList) > 0)
+                                <section>
+                                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Langues</h4>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach($langsList as $l)
+                                            <span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded text-xs">{{ $l['language'] ?? '' }}@if(isset($l['level']) && isset(config('recruitment.language_levels')[$l['level']])) ({{ config('recruitment.language_levels')[$l['level']] }})@endif</span>
+                                        @endforeach
+                                    </div>
+                                </section>
+                            @endif
+                            @if($profile->cv_path)
+                                <section class="pt-2 border-t border-slate-100">
+                                    <a href="{{ asset('storage/'.$profile->cv_path) }}" target="_blank" rel="noopener" class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">Télécharger le CV (PDF)</a>
+                                </section>
+                            @endif
+                        </div>
+                    </article>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="profile-skill-levels">@json(config('recruitment.skill_levels'))</script>
+<script type="application/json" id="profile-language-levels">@json(config('recruitment.language_levels'))</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modalCarte = document.getElementById('modal-carte-candidat');
+    var btnOpen = document.getElementById('btn-open-carte-candidat');
+    var btnClose = document.getElementById('btn-close-carte-candidat');
+    var backdrop = document.getElementById('modal-carte-backdrop');
+    if (btnOpen) btnOpen.addEventListener('click', function() { if (modalCarte) modalCarte.classList.remove('hidden'); });
+    if (btnClose) btnClose.addEventListener('click', function() { if (modalCarte) modalCarte.classList.add('hidden'); });
+    if (backdrop) backdrop.addEventListener('click', function() { if (modalCarte) modalCarte.classList.add('hidden'); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modalCarte && !modalCarte.classList.contains('hidden')) modalCarte.classList.add('hidden'); });
+
+    var skillLevels = JSON.parse(document.getElementById('profile-skill-levels').textContent || '{}');
+    var languageLevels = JSON.parse(document.getElementById('profile-language-levels').textContent || '{}');
+
+    function skillRowHtml(i) {
+        var opts = Object.entries(skillLevels).map(function(e) { return '<option value="'+e[0]+'">'+e[1]+'</option>'; }).join('');
+        return '<div class="skill-row flex flex-wrap gap-2 items-end">' +
+            '<input type="text" name="skills['+i+'][name]" placeholder="Ex: PHP, Excel…" class="flex-1 min-w-[120px] rounded-lg border-slate-300">' +
+            '<select name="skills['+i+'][level]" class="w-48 rounded-lg border-slate-300">'+opts+'</select>' +
+            '<button type="button" class="remove-skill text-slate-400 hover:text-red-600 p-2" title="Supprimer">✕</button></div>';
+    }
+    function languageRowHtml(i) {
+        var opts = Object.entries(languageLevels).map(function(e) { return '<option value="'+e[0]+'">'+e[1]+'</option>'; }).join('');
+        return '<div class="language-row flex flex-wrap gap-2 items-end">' +
+            '<input type="text" name="languages['+i+'][language]" placeholder="Ex: Français, Anglais…" class="flex-1 min-w-[120px] rounded-lg border-slate-300">' +
+            '<select name="languages['+i+'][level]" class="w-48 rounded-lg border-slate-300">'+opts+'</select>' +
+            '<button type="button" class="remove-language text-slate-400 hover:text-red-600 p-2" title="Supprimer">✕</button></div>';
+    }
+
+    var skillsContainer = document.getElementById('skills-container');
+    var languagesContainer = document.getElementById('languages-container');
+
+    document.getElementById('add-skill').addEventListener('click', function() {
+        var n = skillsContainer.querySelectorAll('.skill-row').length;
+        skillsContainer.insertAdjacentHTML('beforeend', skillRowHtml(n));
+        bindRemoveSkill();
+    });
+    document.getElementById('add-language').addEventListener('click', function() {
+        var n = languagesContainer.querySelectorAll('.language-row').length;
+        languagesContainer.insertAdjacentHTML('beforeend', languageRowHtml(n));
+        bindRemoveLanguage();
+    });
+
+    function bindRemoveSkill() {
+        skillsContainer.querySelectorAll('.remove-skill').forEach(function(btn) {
+            btn.onclick = function() {
+                var row = btn.closest('.skill-row');
+                if (skillsContainer.querySelectorAll('.skill-row').length > 1) row.remove();
+            };
+        });
+    }
+    function bindRemoveLanguage() {
+        languagesContainer.querySelectorAll('.remove-language').forEach(function(btn) {
+            btn.onclick = function() {
+                var row = btn.closest('.language-row');
+                if (languagesContainer.querySelectorAll('.language-row').length > 1) row.remove();
+            };
+        });
+    }
+    bindRemoveSkill();
+    bindRemoveLanguage();
+});
+</script>
 @endsection

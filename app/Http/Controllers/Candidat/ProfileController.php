@@ -36,6 +36,7 @@ class ProfileController extends Controller
             'job_type_sought' => 'nullable|string|in:CDI,CDD,Freelance,Stage,Alternance,Temps partiel',
             'sector_id' => 'nullable|exists:sectors,id',
             'education_level' => 'nullable|string|in:Bac,Bac+2,Bac+3,Bac+5,Doctorat',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'skills' => 'nullable|array',
             'skills.*.name' => 'nullable|string|max:255',
             'skills.*.level' => 'nullable|integer|in:25,50,75,100',
@@ -48,6 +49,14 @@ class ProfileController extends Controller
         $rawLanguages = $request->input('languages', []);
         $data['skills'] = array_values(array_filter($rawSkills, fn($s) => !empty(trim($s['name'] ?? ''))));
         $data['languages'] = array_values(array_filter($rawLanguages, fn($l) => !empty(trim($l['language'] ?? ''))));
+        unset($data['photo']);
+
+        if ($request->hasFile('photo')) {
+            if ($profile?->photo_path) {
+                Storage::disk('public')->delete($profile->photo_path);
+            }
+            $data['photo_path'] = $request->file('photo')->store('candidate_photos', 'public');
+        }
 
         if ($profile) {
             $profile->update($data);
@@ -82,7 +91,7 @@ class ProfileController extends Controller
 
     private function computeCompleteness($profile): float
     {
-        $fields = ['first_name', 'last_name', 'phone', 'country', 'city', 'mobility', 'availability', 'experience_range', 'last_position', 'job_type_sought', 'sector_id', 'education_level', 'cv_path'];
+        $fields = ['first_name', 'last_name', 'phone', 'country', 'city', 'mobility', 'availability', 'experience_range', 'last_position', 'job_type_sought', 'sector_id', 'education_level', 'cv_path', 'photo_path'];
         $filled = 0;
         foreach ($fields as $f) {
             $v = $profile->$f ?? null;

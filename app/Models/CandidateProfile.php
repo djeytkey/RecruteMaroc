@@ -14,7 +14,7 @@ class CandidateProfile extends Model
     protected $fillable = [
         'user_id', 'first_name', 'last_name', 'phone', 'country', 'city',
         'mobility', 'availability', 'experience_range', 'last_position',
-        'job_type_sought', 'sector_id', 'education_level', 'cv_path',
+        'job_type_sought', 'sector_id', 'education_level', 'cv_path', 'photo_path',
         'completeness_percentage', 'skills', 'languages',
     ];
 

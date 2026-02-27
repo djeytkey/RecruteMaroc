@@ -23,15 +23,21 @@
         @csrf
         <input type="hidden" name="type" value="{{ $type ?? 'candidat' }}" />
 
+        @if(($type ?? 'candidat') !== 'candidat')
         <div>
             <x-input-label for="name" value="Nom complet" />
             <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
+        @endif
 
-        <div class="mt-4">
+        <div class="{{ ($type ?? 'candidat') === 'candidat' ? '' : 'mt-4' }}">
             <x-input-label for="email" value="Adresse e-mail" />
+            @if(($type ?? 'candidat') === 'candidat')
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+            @else
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            @endif
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 

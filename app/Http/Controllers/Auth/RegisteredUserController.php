@@ -27,12 +27,12 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'type' => ['required', 'in:candidat,recruteur'],
         ];
         if ($request->input('type') === 'recruteur') {
+            $rules['name'] = ['required', 'string', 'max:255'];
             $rules['company_name'] = ['required', 'string', 'max:255'];
             $rules['company_email'] = ['required', 'email'];
             $rules['company_phone'] = ['nullable', 'string', 'max:30'];
@@ -56,8 +56,12 @@ class RegisteredUserController extends Controller
             $isActive = config('recruitment.send_activation_email', false) ? false : true;
         }
 
+        $name = $role === User::ROLE_CANDIDATE
+            ? 'À compléter'
+            : $request->name;
+
         $user = User::create([
-            'name' => $request->name,
+            'name' => $name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $role,
@@ -74,6 +78,11 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        if ($role === User::ROLE_CANDIDATE) {
+            return redirect()->route('candidat.profile.edit')
+                ->with('success', 'Compte créé. Complétez votre profil pour continuer.');
+        }
 
         return redirect(route('dashboard', absolute: false));
     }

@@ -13,13 +13,31 @@
     </div>
 
     <div class="flex items-center gap-6 mb-6 p-4 bg-white rounded-xl border border-slate-200">
-        <div class="relative flex-shrink-0" style="width: 80px; height: 80px;">
-            @php $pct = $profile ? (float) $profile->completeness_percentage : 0; @endphp
-            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                <path class="text-slate-200" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path class="text-emerald-500 transition-all duration-500" stroke="currentColor" stroke-width="3" stroke-dasharray="{{ $pct }}, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            </svg>
-            <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700">{{ round($pct) }}%</span>
+        <div class="relative flex-shrink-0 flex items-center gap-3">
+            <div class="relative" style="width: 80px; height: 80px;">
+                @php
+                    $pct = $profile ? (float) $profile->completeness_percentage : 0;
+                    $circlePath = 'M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831';
+                    $lenR = min(25, $pct);
+                    $lenJ = min(25, max(0, $pct - 25));
+                    $lenO = min(25, max(0, $pct - 50));
+                    $lenV = min(25, max(0, $pct - 75));
+                @endphp
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <defs>
+                        <linearGradient id="gradProfil1" gradientUnits="userSpaceOnUse" x1="18" y1="2" x2="34" y2="18"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
+                        <linearGradient id="gradProfil2" gradientUnits="userSpaceOnUse" x1="34" y1="18" x2="18" y2="34"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+                        <linearGradient id="gradProfil3" gradientUnits="userSpaceOnUse" x1="18" y1="34" x2="2" y2="18"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ea580c"/></linearGradient>
+                        <linearGradient id="gradProfil4" gradientUnits="userSpaceOnUse" x1="2" y1="18" x2="18" y2="2"><stop offset="0%" stop-color="#ea580c"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+                    </defs>
+                    <path stroke="#e2e8f0" stroke-width="3" fill="none" d="{{ $circlePath }}" />
+                    @if($lenR > 0)<path stroke="url(#gradProfil1)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenR }}, 100" stroke-dashoffset="0" d="{{ $circlePath }}" />@endif
+                    @if($lenJ > 0)<path stroke="url(#gradProfil2)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenJ }}, 100" stroke-dashoffset="-25" d="{{ $circlePath }}" />@endif
+                    @if($lenO > 0)<path stroke="url(#gradProfil3)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenO }}, 100" stroke-dashoffset="-50" d="{{ $circlePath }}" />@endif
+                    @if($lenV > 0)<path stroke="url(#gradProfil4)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenV }}, 100" stroke-dashoffset="-75" d="{{ $circlePath }}" />@endif
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700">{{ round($pct) }}%</span>
+            </div>
         </div>
         <div>
             <p class="font-medium text-slate-800">Taux de complétude du profil</p>
@@ -27,9 +45,24 @@
         </div>
     </div>
 
-    <form action="{{ route('candidat.profile.update') }}" method="POST" class="space-y-6 bg-white rounded-xl border border-slate-200 p-6" id="profile-form">
+    <form action="{{ route('candidat.profile.update') }}" method="POST" class="space-y-6 bg-white rounded-xl border border-slate-200 p-6" id="profile-form" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+        <div class="flex flex-wrap items-start gap-6">
+            <div class="flex-shrink-0">
+                @if($profile?->photo_path)
+                    <img src="{{ asset('storage/'.$profile->photo_path) }}" width="100" height="100" alt="Ma photo" class="w-24 h-24 rounded-full object-cover border-2 border-slate-200">
+                @else
+                    <div class="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-sm text-center px-1">Photo</div>
+                @endif
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Photo du profil</label>
+                <input type="file" name="photo" accept="image/jpeg,image/png,image/jpg" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700">
+                <p class="text-xs text-slate-500 mt-1">JPG ou PNG, max. 2 Mo.</p>
+                @error('photo')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+            </div>
+        </div>
         <div class="grid sm:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Prénom *</label>
@@ -203,7 +236,7 @@
     <div class="fixed inset-0 bg-black/60" id="modal-carte-backdrop" style="background-color: rgba(0, 0, 0, 0.6);"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
         <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 flex-shrink-0">
                 <h2 class="text-lg font-semibold text-slate-800">Carte candidat</h2>
                 <button type="button" id="btn-close-carte-candidat" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg" aria-label="Fermer">✕</button>
             </div>
@@ -212,14 +245,46 @@
                     <p class="text-slate-600">Complétez et enregistrez votre profil pour afficher la carte candidat.</p>
                 @else
                     <article class="carte-candidat-body">
-                        <div class="bg-slate-800 text-white px-5 py-5 rounded-t-xl flex items-center gap-4">
-                            <div class="flex-shrink-0 w-16 h-16 rounded-full bg-slate-600 flex items-center justify-center text-xl font-bold text-slate-300">
-                                {{ strtoupper(mb_substr($profile->first_name ?? '', 0, 1) . mb_substr($profile->last_name ?? '', 0, 1)) }}
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold">{{ $profile->full_name }}</h3>
-                                @if($profile->last_position)<p class="text-slate-300 text-sm mt-0.5">{{ $profile->last_position }}</p>@endif
-                                @if($profile->sector)<p class="text-slate-400 text-xs mt-1">{{ $profile->sector->name }}</p>@endif
+                        <div class="bg-slate-800 text-white p-5 rounded-t-xl flex items-center gap-4">
+                            @if($profile->photo_path)
+                                <img src="{{ asset('storage/'.$profile->photo_path) }}" alt="{{ $profile->full_name }}" class="flex-shrink-0 w-16 h-16 rounded-full object-cover border-2 border-slate-600">
+                            @else
+                                <div class="flex-shrink-0 w-16 h-16 rounded-full bg-slate-600 flex items-center justify-center text-xl font-bold text-slate-300">
+                                    {{ strtoupper(mb_substr($profile->first_name ?? '', 0, 1) . mb_substr($profile->last_name ?? '', 0, 1)) }}
+                                </div>
+                            @endif
+                            <div class="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 min-w-0">
+                                <div>
+                                    <h3 class="text-lg font-bold">{{ $profile->full_name }}</h3>
+                                    @if($profile->last_position)<p class="text-slate-300 text-sm mt-0.5">{{ $profile->last_position }}</p>@endif
+                                </div>
+                                @php
+                                    $pctCarte = (float) $profile->completeness_percentage;
+                                    $pathCarte = 'M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831';
+                                    $lenRC = min(25, $pctCarte);
+                                    $lenJC = min(25, max(0, $pctCarte - 25));
+                                    $lenOC = min(25, max(0, $pctCarte - 50));
+                                    $lenVC = min(25, max(0, $pctCarte - 75));
+                                @endphp
+                                <div class="flex-shrink-0 flex flex-col items-center">
+                                    <div class="relative inline-flex" style="width: 70px; height: 70px;">
+                                        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                            <defs>
+                                                <linearGradient id="gradCarte1" gradientUnits="userSpaceOnUse" x1="18" y1="2" x2="34" y2="18"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
+                                                <linearGradient id="gradCarte2" gradientUnits="userSpaceOnUse" x1="34" y1="18" x2="18" y2="34"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+                                                <linearGradient id="gradCarte3" gradientUnits="userSpaceOnUse" x1="18" y1="34" x2="2" y2="18"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ea580c"/></linearGradient>
+                                                <linearGradient id="gradCarte4" gradientUnits="userSpaceOnUse" x1="2" y1="18" x2="18" y2="2"><stop offset="0%" stop-color="#ea580c"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+                                            </defs>
+                                            <path stroke="#475569" stroke-width="3" fill="none" d="{{ $pathCarte }}" />
+                                            @if($lenRC > 0)<path stroke="url(#gradCarte1)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenRC }}, 100" stroke-dashoffset="0" d="{{ $pathCarte }}" />@endif
+                                            @if($lenJC > 0)<path stroke="url(#gradCarte2)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenJC }}, 100" stroke-dashoffset="-25" d="{{ $pathCarte }}" />@endif
+                                            @if($lenOC > 0)<path stroke="url(#gradCarte3)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenOC }}, 100" stroke-dashoffset="-50" d="{{ $pathCarte }}" />@endif
+                                            @if($lenVC > 0)<path stroke="url(#gradCarte4)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenVC }}, 100" stroke-dashoffset="-75" d="{{ $pathCarte }}" />@endif
+                                        </svg>
+                                        <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">{{ round($pctCarte) }}%</span>
+                                    </div>
+                                    <span class="text-slate-400 text-xs mt-0.5 whitespace-nowrap">Complétude du profil</span>
+                                </div>
                             </div>
                         </div>
                         <div class="border border-t-0 border-slate-200 rounded-b-xl p-5 space-y-4">

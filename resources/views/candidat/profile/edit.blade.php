@@ -13,32 +13,11 @@
     </div>
 
     <div class="flex items-center gap-6 mb-6 p-4 bg-white rounded-xl border border-slate-200">
-        <div class="relative flex-shrink-0 flex items-center gap-3">
-            <div class="relative" style="width: 80px; height: 80px;">
-                @php
-                    $pct = $profile ? (float) $profile->completeness_percentage : 0;
-                    $circlePath = 'M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831';
-                    $lenR = min(25, $pct);
-                    $lenJ = min(25, max(0, $pct - 25));
-                    $lenO = min(25, max(0, $pct - 50));
-                    $lenV = min(25, max(0, $pct - 75));
-                @endphp
-                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <defs>
-                        <linearGradient id="gradProfil1" gradientUnits="userSpaceOnUse" x1="18" y1="2" x2="34" y2="18"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
-                        <linearGradient id="gradProfil2" gradientUnits="userSpaceOnUse" x1="34" y1="18" x2="18" y2="34"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
-                        <linearGradient id="gradProfil3" gradientUnits="userSpaceOnUse" x1="18" y1="34" x2="2" y2="18"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ea580c"/></linearGradient>
-                        <linearGradient id="gradProfil4" gradientUnits="userSpaceOnUse" x1="2" y1="18" x2="18" y2="2"><stop offset="0%" stop-color="#ea580c"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
-                    </defs>
-                    <path stroke="#e2e8f0" stroke-width="3" fill="none" d="{{ $circlePath }}" />
-                    @if($lenR > 0)<path stroke="url(#gradProfil1)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenR }}, 100" stroke-dashoffset="0" d="{{ $circlePath }}" />@endif
-                    @if($lenJ > 0)<path stroke="url(#gradProfil2)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenJ }}, 100" stroke-dashoffset="-25" d="{{ $circlePath }}" />@endif
-                    @if($lenO > 0)<path stroke="url(#gradProfil3)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenO }}, 100" stroke-dashoffset="-50" d="{{ $circlePath }}" />@endif
-                    @if($lenV > 0)<path stroke="url(#gradProfil4)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenV }}, 100" stroke-dashoffset="-75" d="{{ $circlePath }}" />@endif
-                </svg>
-                <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700">{{ round($pct) }}%</span>
-            </div>
-        </div>
+        <x-completeness-circle
+            :percentage="$profile ? $profile->completeness_percentage : 0"
+            :size="80"
+            variant="light"
+        />
         <div>
             <p class="font-medium text-slate-800">Taux de complétude du profil</p>
             <p class="text-sm text-slate-500">Complétez les champs pour améliorer votre visibilité.</p>
@@ -258,33 +237,12 @@
                                     <h3 class="text-lg font-bold">{{ $profile->full_name }}</h3>
                                     @if($profile->last_position)<p class="text-slate-300 text-sm mt-0.5">{{ $profile->last_position }}</p>@endif
                                 </div>
-                                @php
-                                    $pctCarte = (float) $profile->completeness_percentage;
-                                    $pathCarte = 'M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831';
-                                    $lenRC = min(25, $pctCarte);
-                                    $lenJC = min(25, max(0, $pctCarte - 25));
-                                    $lenOC = min(25, max(0, $pctCarte - 50));
-                                    $lenVC = min(25, max(0, $pctCarte - 75));
-                                @endphp
-                                <div class="flex-shrink-0 flex flex-col items-center">
-                                    <div class="relative inline-flex" style="width: 70px; height: 70px;">
-                                        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                                            <defs>
-                                                <linearGradient id="gradCarte1" gradientUnits="userSpaceOnUse" x1="18" y1="2" x2="34" y2="18"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
-                                                <linearGradient id="gradCarte2" gradientUnits="userSpaceOnUse" x1="34" y1="18" x2="18" y2="34"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
-                                                <linearGradient id="gradCarte3" gradientUnits="userSpaceOnUse" x1="18" y1="34" x2="2" y2="18"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ea580c"/></linearGradient>
-                                                <linearGradient id="gradCarte4" gradientUnits="userSpaceOnUse" x1="2" y1="18" x2="18" y2="2"><stop offset="0%" stop-color="#ea580c"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
-                                            </defs>
-                                            <path stroke="#475569" stroke-width="3" fill="none" d="{{ $pathCarte }}" />
-                                            @if($lenRC > 0)<path stroke="url(#gradCarte1)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenRC }}, 100" stroke-dashoffset="0" d="{{ $pathCarte }}" />@endif
-                                            @if($lenJC > 0)<path stroke="url(#gradCarte2)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenJC }}, 100" stroke-dashoffset="-25" d="{{ $pathCarte }}" />@endif
-                                            @if($lenOC > 0)<path stroke="url(#gradCarte3)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenOC }}, 100" stroke-dashoffset="-50" d="{{ $pathCarte }}" />@endif
-                                            @if($lenVC > 0)<path stroke="url(#gradCarte4)" stroke-width="3" fill="none" stroke-linecap="butt" stroke-dasharray="{{ $lenVC }}, 100" stroke-dashoffset="-75" d="{{ $pathCarte }}" />@endif
-                                        </svg>
-                                        <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">{{ round($pctCarte) }}%</span>
-                                    </div>
-                                    <span class="text-slate-400 text-xs mt-0.5 whitespace-nowrap">Complétude du profil</span>
-                                </div>
+                                <x-completeness-circle
+                                    :percentage="$profile->completeness_percentage"
+                                    :size="70"
+                                    variant="dark"
+                                    label="Complétude du profil"
+                                />
                             </div>
                         </div>
                         <div class="border border-t-0 border-slate-200 rounded-b-xl p-5 space-y-4">

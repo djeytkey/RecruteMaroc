@@ -4,9 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Emploi Maroc - Offres d\'emploi') - {{ config('app.name') }}</title>
+    <title>@yield('title', 'Emploi Maroc - Offres d\'emploi') - {{ $systemSettings?->system_name ?? config('app.name') }}</title>
+    @if($systemSettings?->favicon_url)
+    <link rel="icon" href="{{ $systemSettings->favicon_url }}" type="image/x-icon">
+    @endif
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
@@ -19,8 +23,14 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="{{ route('home') }}" class="flex items-center gap-2 font-bold text-xl text-emerald-600">
-                    <span class="bg-emerald-500 text-white px-2 py-0.5 rounded">Emploi</span>
-                    <span class="text-slate-700">Maroc</span>
+                    @if($systemSettings?->logo_url)
+                        <img src="{{ $systemSettings->logo_url }}" alt="{{ $systemSettings->system_name ?? config('app.name') }}" class="h-9 object-contain">
+                    @else(!$systemSettings?->logo_url)
+                        <span class="bg-emerald-500 text-white px-2 py-0.5 rounded">Emploi</span>
+                        <span class="text-slate-700">Maroc</span>
+                    {{-- @elseif($systemSettings?->system_name)
+                        <span class="text-slate-700">{{ $systemSettings->system_name }}</span> --}}
+                    @endif
                 </a>
                 <nav class="hidden md:flex items-center gap-6">
                     <a href="{{ route('job-offers.index') }}" class="text-slate-600 hover:text-emerald-600 font-medium">Offres d'emploi</a>
@@ -39,8 +49,8 @@
                     @else
                         <a href="{{ route('register') }}?type=candidat" class="text-slate-600 hover:text-emerald-600 font-medium">Candidat</a>
                         <a href="{{ route('register') }}?type=recruteur" class="text-slate-600 hover:text-emerald-600 font-medium">Recruteur</a>
-                        <a href="{{ route('login') }}" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-medium">Connexion</a>
-                        <a href="{{ route('register') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium">Inscription</a>
+                        <a href="{{ route('login') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium">Connexion</a>
+                        <!-- <a href="{{ route('register') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium">Inscription</a> -->
                     @endauth
                 </nav>
             </div>

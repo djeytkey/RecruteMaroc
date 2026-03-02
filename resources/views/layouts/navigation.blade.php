@@ -6,7 +6,11 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                        @if(isset($systemSettings) && $systemSettings->logo_url)
+                            <img src="{{ $systemSettings->logo_url }}" alt="{{ $systemSettings->system_name ?? config('app.name') }}" class="block h-9 w-auto object-contain">
+                        @else
+                            <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                        @endif
                     </a>
                 </div>
 

@@ -35,9 +35,11 @@ class RegisteredUserController extends Controller
             $rules['name'] = ['required', 'string', 'max:255'];
             $rules['company_name'] = ['required', 'string', 'max:255'];
             $rules['company_email'] = ['required', 'email'];
-            $rules['company_phone'] = ['nullable', 'string', 'max:30'];
+            $rules['company_phone'] = ['nullable', 'string', 'max:30', (new \Propaganistas\LaravelPhone\Rules\Phone)->international()];
         }
-        $request->validate($rules);
+        $request->validate($rules, [
+            'company_phone.phone' => 'Le numéro de téléphone entreprise n\'est pas un numéro international valide.',
+        ]);
 
         $role = $request->type === 'recruteur' ? User::ROLE_RECRUITER : User::ROLE_CANDIDATE;
         $companyId = null;

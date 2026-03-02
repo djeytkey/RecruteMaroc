@@ -8,6 +8,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Propaganistas\LaravelPhone\Rules\Phone;
+use Propaganistas\LaravelPhone\PhoneNumber;
 
 class ProfileController extends Controller
 {
@@ -23,10 +26,16 @@ class ProfileController extends Controller
         $user = auth()->user();
         $profile = $user->candidateProfile;
 
-        $data = $request->validate([
+        $countryIso = $this->countryNameToIso($request->input('country'));
+        $phoneRules = ['nullable', 'string', 'max:30'];
+        if ($request->filled('phone') && $countryIso) {
+            $phoneRules[] = (new Phone)->country($countryIso);
+        }
+
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:30',
+            'phone' => $phoneRules,
             'country' => 'required|string|max:100',
             'city' => 'nullable|string|max:100',
             'mobility' => 'nullable|string|in:locale,nationale,internationale,teletravail_uniquement',
@@ -43,13 +52,25 @@ class ProfileController extends Controller
             'languages' => 'nullable|array',
             'languages.*.language' => 'nullable|string|max:100',
             'languages.*.level' => 'nullable|string|in:'.implode(',', array_keys(config('recruitment.language_levels'))),
+        ], [
+            'phone.phone' => 'Le numéro de téléphone n\'est pas valide pour le pays indiqué (ex. Maroc : 10 chiffres avec le 0).',
         ]);
+        $validator->validate();
+        $data = $validator->validated();
 
         $rawSkills = $request->input('skills', []);
         $rawLanguages = $request->input('languages', []);
         $data['skills'] = array_values(array_filter($rawSkills, fn($s) => !empty(trim($s['name'] ?? ''))));
         $data['languages'] = array_values(array_filter($rawLanguages, fn($l) => !empty(trim($l['language'] ?? ''))));
         unset($data['photo']);
+
+        if (!empty($data['phone']) && $countryIso) {
+            try {
+                $data['phone'] = (new PhoneNumber($data['phone']))->formatE164();
+            } catch (\Throwable $e) {
+                // keep as-is if normalization fails
+            }
+        }
 
         if ($request->hasFile('photo')) {
             if ($profile?->photo_path) {
@@ -111,5 +132,20 @@ class ProfileController extends Controller
         if ($hasLanguages) $filled++;
         $total = count($fields) + 2; // 13 champs + compétences + langues
         return round(($filled / $total) * 100, 2);
+    }
+
+    private function countryNameToIso(?string $country): ?string
+    {
+        if ($country === null || trim($country) === '') {
+            return null;
+        }
+        $map = [
+            'Maroc' => 'MA', 'France' => 'FR', 'Belgique' => 'BE', 'Suisse' => 'CH',
+            'Canada' => 'CA', 'Allemagne' => 'DE', 'Espagne' => 'ES', 'Italie' => 'IT',
+            'Royaume-Uni' => 'GB', 'États-Unis' => 'US', 'Algérie' => 'DZ', 'Tunisie' => 'TN',
+            'Sénégal' => 'SN', 'Côte d\'Ivoire' => 'CI', 'Cameroun' => 'CM', 'Mauritanie' => 'MR',
+            'Mali' => 'ML', 'Luxembourg' => 'LU', 'Pays-Bas' => 'NL',
+        ];
+        return $map[trim($country)] ?? null;
     }
 }

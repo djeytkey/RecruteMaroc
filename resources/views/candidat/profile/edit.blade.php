@@ -56,7 +56,8 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
-            <input type="text" name="phone" value="{{ old('phone', $profile?->phone) }}" class="w-full rounded-lg border-slate-300">
+            <input type="tel" name="phone" value="{{ old('phone', $profile?->phone) }}" class="w-full rounded-lg border-slate-300" autocomplete="tel">
+            @error('phone')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
         <div class="grid sm:grid-cols-2 gap-4">
             <div>

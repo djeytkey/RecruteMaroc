@@ -57,7 +57,8 @@
                 </div>
                 <div>
                     <x-input-label for="company_phone" value="Téléphone (optionnel)" />
-                    <x-text-input id="company_phone" class="block mt-1 w-full" type="text" name="company_phone" :value="old('company_phone')" />
+                    <x-text-input id="company_phone" class="block mt-1 w-full" type="tel" name="company_phone" :value="old('company_phone')" />
+                    <x-input-error :messages="$errors->get('company_phone')" class="mt-2" />
                 </div>
             </div>
         </div>
@@ -65,22 +66,26 @@
 
         <div class="mt-4">
             <x-input-label for="password" value="Mot de passe" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+            <x-text-input id="password" class="block w-full" type="password" name="password" required autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="password_confirmation" value="Confirmer le mot de passe" />
-            <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
+            <x-text-input id="password_confirmation" class="block w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4 gap-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">Déjà inscrit ?</a>
-            <a class="text-sm text-emerald-600 hover:underline" href="{{ route('register') }}?type={{ ($type ?? 'candidat') === 'recruteur' ? 'candidat' : 'recruteur' }}">
-                S'inscrire en tant que {{ ($type ?? 'candidat') === 'recruteur' ? 'candidat' : 'recruteur' }}
+        <div class="flex items-center justify-center gap-2 mt-4">
+            <a href="{{ route('login') }}" class="flex-1 min-w-0 inline-flex justify-center items-center px-2 py-2.5 bg-white border border-gray-300 rounded-md font-semibold text-[11px] text-gray-700 tracking-wide shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 whitespace-nowrap">
+                Déjà inscrit ?
             </a>
-            <x-primary-button class="ms-4">S'inscrire</x-primary-button>
+            <a href="{{ route('register') }}?type={{ ($type ?? 'candidat') === 'recruteur' ? 'candidat' : 'recruteur' }}" class="flex-1 min-w-0 inline-flex justify-center items-center px-2 py-2.5 bg-emerald-600 border border-transparent rounded-md font-semibold text-[11px] text-white tracking-wide hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150 whitespace-nowrap">
+                {{ ($type ?? 'candidat') === 'recruteur' ? 'Candidat' : 'Recruteur' }}
+            </a>
+            <button type="submit" class="flex-1 min-w-0 inline-flex justify-center items-center px-2 py-2.5 bg-gray-800 border border-transparent rounded-md font-semibold text-[11px] text-white tracking-wide hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 whitespace-nowrap">
+                S'inscrire
+            </button>
         </div>
     </form>
 </x-guest-layout>
